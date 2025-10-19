@@ -427,3 +427,218 @@ download_file "https://example.com/file.tar.gz" "backup/file.tar.gz"
 - Or move to Special Operations (Security & Advanced Techniques)
 
 **Your command, General.**
+    echo "Error: Command failed!" >&2
+    exit 1
+fi
+
+# Function error handling
+safe_command() {
+    local output
+    if output=$(risky_command 2>&1); then
+        echo "Success: $output"
+        return 0
+    else
+        echo "Error: Command failed with output: $output" >&2
+        return 1
+    fi
+}
+
+# Trap for cleanup on exit
+cleanup() {
+    echo "Cleaning up temporary files..."
+    rm -f /tmp/script_temp_*
+}
+trap cleanup EXIT
+
+# Trap for specific signals
+handle_interrupt() {
+    echo "Script interrupted by user"
+    cleanup
+    exit 130
+}
+trap handle_interrupt INT TERM
+```
+
+**Understanding Exit Codes:**
+
+Every command in Unix returns an exit code (also called status code or return code). Zero means success, and any non-zero value indicates failure. The special variable `$?` holds the exit code of the last command. By checking this, you can determine whether operations succeeded and take appropriate action.
+
+**The Power of set Options:**
+
+The `set -e` option tells bash to exit immediately if any command fails. This prevents cascading errors where one failure causes subsequent commands to operate on incorrect state. The `set -u` option treats undefined variables as errors, catching typos and logic errors early. The `set -o pipefail` option ensures that pipeline failures are detected even if the final command succeeds.
+
+---
+
+### Practical Script Example: Backup Automation
+
+Let's combine everything into a real-world backup script that demonstrates professional scripting practices:
+
+```bash
+#!/bin/bash
+###############################################################################
+# Backup Script - Automated directory backup with rotation
+# Author: Wan Mohamad Hanis bin Wan Hassan
+# Usage: ./backup.sh SOURCE_DIR DEST_DIR [RETENTION_DAYS]
+###############################################################################
+
+set -euo pipefail
+
+# Color codes for output
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly NC='\033[0m' # No Color
+
+# Default values
+readonly RETENTION_DAYS=${3:-7}
+readonly TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# Function: Print colored messages
+log_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1" >&2
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+# Function: Validate inputs
+validate_inputs() {
+    if [ $# -lt 2 ]; then
+        log_error "Usage: $0 SOURCE_DIR DEST_DIR [RETENTION_DAYS]"
+        exit 1
+    fi
+    
+    if [ ! -d "$1" ]; then
+        log_error "Source directory does not exist: $1"
+        exit 1
+    fi
+    
+    if [ ! -d "$2" ]; then
+        log_warn "Destination directory does not exist: $2"
+        log_info "Creating destination directory..."
+        mkdir -p "$2"
+    fi
+}
+
+# Function: Calculate directory size
+get_directory_size() {
+    du -sh "$1" | cut -f1
+}
+
+# Function: Create backup
+create_backup() {
+    local source=$1
+    local dest=$2
+    local backup_name="backup_${TIMESTAMP}.tar.gz"
+    local backup_path="${dest}/${backup_name}"
+    
+    log_info "Starting backup of $source"
+    log_info "Source size: $(get_directory_size "$source")"
+    
+    if tar -czf "$backup_path" -C "$(dirname "$source")" "$(basename "$source")"; then
+        log_info "Backup created successfully: $backup_path"
+        log_info "Backup size: $(get_directory_size "$backup_path")"
+        return 0
+    else
+        log_error "Backup creation failed"
+        return 1
+    fi
+}
+
+# Function: Remove old backups
+cleanup_old_backups() {
+    local dest=$1
+    local retention=$2
+    
+    log_info "Cleaning up backups older than $retention days"
+    
+    local removed_count=0
+    while IFS= read -r old_backup; do
+        rm -f "$old_backup"
+        log_info "Removed old backup: $(basename "$old_backup")"
+        removed_count=$((removed_count + 1))
+    done < <(find "$dest" -name "backup_*.tar.gz" -mtime +$retention)
+    
+    if [ $removed_count -eq 0 ]; then
+        log_info "No old backups to remove"
+    else
+        log_info "Removed $removed_count old backup(s)"
+    fi
+}
+
+# Function: Generate backup report
+generate_report() {
+    local dest=$1
+    
+    log_info "=== Backup Report ==="
+    log_info "Total backups: $(find "$dest" -name "backup_*.tar.gz" | wc -l)"
+    log_info "Total size: $(du -sh "$dest" | cut -f1)"
+    log_info "Latest backup: $(ls -t "$dest"/backup_*.tar.gz | head -1)"
+}
+
+# Main execution
+main() {
+    local source_dir=$1
+    local dest_dir=$2
+    
+    log_info "Backup script started"
+    validate_inputs "$@"
+    
+    if create_backup "$source_dir" "$dest_dir"; then
+        cleanup_old_backups "$dest_dir" "$RETENTION_DAYS"
+        generate_report "$dest_dir"
+        log_info "Backup script completed successfully"
+        exit 0
+    else
+        log_error "Backup script failed"
+        exit 1
+    fi
+}
+
+# Execute main function with all script arguments
+main "$@"
+```
+
+**Understanding This Professional Script:**
+
+This script demonstrates enterprise-grade practices. Notice how it starts with a clear header documenting its purpose, author, and usage. The `set -euo pipefail` ensures the script fails fast on errors. Constants are declared with `readonly` to prevent accidental modification. Functions have single responsibilities and descriptive names. Color-coded logging makes output easy to scan. Input validation prevents the script from running with bad parameters. The cleanup function ensures old backups don't consume infinite disk space.
+
+---
+
+## 🎯 Officer Training Complete
+
+You've successfully completed Officer Training and developed intermediate-level command-line proficiency. You can now manage processes like a professional system administrator, understand network operations and troubleshoot connectivity issues, and write shell scripts that automate complex workflows.
+
+**Skills You've Mastered:**
+
+Process management gives you control over running programs, letting you start, stop, prioritize, and monitor them. Network operations enable you to diagnose connectivity problems, analyze traffic, and configure network settings. Shell scripting transforms you from a command user into an automation architect capable of building sophisticated tools.
+
+**The Integration of Knowledge:**
+
+Notice how these skills interconnect. When you write scripts to automate system administration tasks, you're combining file operations from Boot Camp with process management and networking from Officer Training. This integration is where real power emerges. A script that backs up files, monitors server health, and sends network alerts combines every skill you've learned so far.
+
+**Professional Growth Path:**
+
+You're now equipped for real-world system administration tasks. You can maintain servers, automate routine operations, troubleshoot system issues, and write scripts that save hours of manual work. Companies pay well for these skills because they directly impact operational efficiency and reliability.
+
+**What's Next:**
+
+You're ready for Special Operations, where you'll learn advanced techniques for performance optimization, sophisticated networking, and complex automation. The foundation you've built here makes those advanced topics accessible. Remember that mastery comes from application—use these skills in real projects, contribute to open-source infrastructure, and build tools that solve actual problems.
+
+**Continue Your Journey:** [Special Operations Module](../03-special-operations/README.md)
+
+---
+
+**Module Status:** ✅ COMPLETE  
+**Skill Level:** Intermediate System Administration  
+**Time to Mastery:** 20-30 hours of practice  
+**Prerequisites for Next Module:** Comfort with all process, network, and scripting operations
+
+**Author:** Wan Mohamad Hanis bin Wan Hassan  
+**Framework:** CLI Sovereign Mastery | MPNS™ Methodology  
+**Last Updated:** October 20, 2025

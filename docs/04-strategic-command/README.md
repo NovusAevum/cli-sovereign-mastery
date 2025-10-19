@@ -606,3 +606,301 @@ az aks upgrade --resource-group production-rg --name production-aks --kubernetes
 **Strategic Command establishing enterprise architecture patterns...**
 
 **Continuing with disaster recovery, cost optimization, and operational excellence...**
+
+---
+
+## PART 3: DISASTER RECOVERY & HIGH AVAILABILITY
+
+### Multi-Region Architecture
+
+True strategic command requires architecting for failure. Disaster recovery isn't about if systems fail—it's about when. Let's explore enterprise-grade resilience patterns.
+
+**AWS Multi-Region Failover:**
+```bash
+# Primary region health check
+check_primary_health() {
+    local primary_endpoint="https://api.primary.example.com/health"
+    
+    if curl -sf "$primary_endpoint" > /dev/null; then
+        return 0  # Healthy
+    else
+        return 1  # Unhealthy
+    fi
+}
+
+# Failover to DR region
+initiate_failover() {
+    echo "Initiating failover to DR region..."
+    
+    # Update Route53 to point to DR region
+    aws route53 change-resource-record-sets \
+        --hosted-zone-id Z123456789ABC \
+        --change-batch file://dr-failover.json
+    
+    # Promote RDS read replica to primary
+    aws rds promote-read-replica \
+        --db-instance-identifier dr-database \
+        --region us-west-2
+    
+    # Scale up DR application servers
+    aws autoscaling set-desired-capacity \
+        --auto-scaling-group-name dr-asg \
+        --desired-capacity 10 \
+        --region us-west-2
+    
+    echo "Failover complete. Monitoring DR health..."
+}
+
+# Automated failover monitoring
+monitor_and_failover() {
+    local failure_count=0
+    local threshold=3
+    
+    while true; do
+        if check_primary_health; then
+            failure_count=0
+            echo "Primary region healthy"
+        else
+            failure_count=$((failure_count + 1))
+            echo "Primary health check failed ($failure_count/$threshold)"
+            
+            if [ $failure_count -ge $threshold ]; then
+                initiate_failover
+                break
+            fi
+        fi
+        
+        sleep 30
+    done
+}
+```
+
+**Database Backup and Recovery:**
+```bash
+# Automated RDS snapshot with verification
+create_verified_snapshot() {
+    local db_instance="$1"
+    local snapshot_id="manual-$(date +%Y%m%d-%H%M%S)"
+    
+    echo "Creating snapshot: $snapshot_id"
+    
+    # Create snapshot
+    aws rds create-db-snapshot \
+        --db-instance-identifier "$db_instance" \
+        --db-snapshot-identifier "$snapshot_id"
+    
+    # Wait for completion
+    aws rds wait db-snapshot-completed \
+        --db-snapshot-identifier "$snapshot_id"
+    
+    # Verify snapshot
+    local snapshot_status=$(aws rds describe-db-snapshots \
+        --db-snapshot-identifier "$snapshot_id" \
+        --query 'DBSnapshots[0].Status' \
+        --output text)
+    
+    if [ "$snapshot_status" = "available" ]; then
+        echo "Snapshot verified: $snapshot_id"
+        
+        # Copy to DR region
+        aws rds copy-db-snapshot \
+            --source-db-snapshot-identifier "$snapshot_id" \
+            --target-db-snapshot-identifier "$snapshot_id" \
+            --source-region us-east-1 \
+            --region us-west-2
+        
+        return 0
+    else
+        echo "Snapshot verification failed"
+        return 1
+    fi
+}
+
+# Point-in-time recovery
+restore_database_to_point_in_time() {
+    local source_db="$1"
+    local restore_time="$2"  # Format: 2025-10-20T14:30:00Z
+    local target_db="${source_db}-restored-$(date +%Y%m%d)"
+    
+    echo "Restoring $source_db to $restore_time"
+    
+    aws rds restore-db-instance-to-point-in-time \
+        --source-db-instance-identifier "$source_db" \
+        --target-db-instance-identifier "$target_db" \
+        --restore-time "$restore_time"
+    
+    # Wait for restore
+    aws rds wait db-instance-available \
+        --db-instance-identifier "$target_db"
+    
+    echo "Database restored: $target_db"
+    echo "Connection endpoint:"
+    aws rds describe-db-instances \
+        --db-instance-identifier "$target_db" \
+        --query 'DBInstances[0].Endpoint.Address' \
+        --output text
+}
+```
+
+---
+
+## PART 4: COST OPTIMIZATION AT SCALE
+
+### FinOps: Financial Operations
+
+Strategic command includes financial responsibility. Cloud costs can spiral without proper governance. Let's explore cost optimization patterns.
+
+**Resource Tagging Enforcement:**
+```bash
+#!/bin/bash
+# Enforce tagging policies across AWS resources
+
+enforce_ec2_tagging() {
+    echo "Auditing EC2 instance tags..."
+    
+    # Find untagged instances
+    untagged_instances=$(aws ec2 describe-instances \
+        --query 'Reservations[].Instances[?!Tags || length(Tags[?Key==`Environment`]) == `0`].InstanceId' \
+        --output text)
+    
+    if [ -n "$untagged_instances" ]; then
+        echo "Found untagged instances: $untagged_instances"
+        
+        # Stop untagged instances (after grace period)
+        for instance_id in $untagged_instances; do
+            # Check if instance is older than 7 days
+            launch_time=$(aws ec2 describe-instances \
+                --instance-ids "$instance_id" \
+                --query 'Reservations[0].Instances[0].LaunchTime' \
+                --output text)
+            
+            # If older than grace period, stop instance
+            echo "Stopping non-compliant instance: $instance_id"
+            aws ec2 stop-instances --instance-ids "$instance_id"
+            
+            # Tag as non-compliant
+            aws ec2 create-tags \
+                --resources "$instance_id" \
+                --tags Key=ComplianceStatus,Value=NonCompliant Key=StoppedDate,Value=$(date +%Y-%m-%d)
+        done
+    else
+        echo "All instances properly tagged"
+    fi
+}
+
+# Identify idle resources
+find_idle_resources() {
+    echo "Finding idle resources..."
+    
+    # Stopped EC2 instances older than 30 days
+    aws ec2 describe-instances \
+        --filters "Name=instance-state-name,Values=stopped" \
+        --query 'Reservations[].Instances[?LaunchTime<=`'$(date -d '30 days ago' -u +%Y-%m-%dT%H:%M:%S)'`].[InstanceId,LaunchTime,Tags[?Key==`Name`].Value|[0]]' \
+        --output table
+    
+    # EBS volumes not attached
+    aws ec2 describe-volumes \
+        --filters "Name=status,Values=available" \
+        --query 'Volumes[?CreateTime<=`'$(date -d '30 days ago' -u +%Y-%m-%dT%H:%M:%S)'`].[VolumeId,Size,CreateTime]' \
+        --output table
+    
+    # Elastic IPs not associated
+    aws ec2 describe-addresses \
+        --query 'Addresses[?!InstanceId].[PublicIp,AllocationId]' \
+        --output table
+}
+
+# Rightsizing recommendations
+generate_rightsizing_report() {
+    # Get CloudWatch metrics for instances
+    for instance_id in $(aws ec2 describe-instances \
+        --filters "Name=instance-state-name,Values=running" \
+        --query 'Reservations[].Instances[].InstanceId' \
+        --output text); do
+        
+        # Get average CPU utilization over 30 days
+        avg_cpu=$(aws cloudwatch get-metric-statistics \
+            --namespace AWS/EC2 \
+            --metric-name CPUUtilization \
+            --dimensions Name=InstanceId,Value=$instance_id \
+            --start-time $(date -d '30 days ago' -u +%Y-%m-%dT%H:%M:%S) \
+            --end-time $(date -u +%Y-%m-%dT%H:%M:%S) \
+            --period 86400 \
+            --statistics Average \
+            --query 'Datapoints[].Average' \
+            --output json | jq 'add/length')
+        
+        if (( $(echo "$avg_cpu < 20" | bc -l) )); then
+            echo "Instance $instance_id: Avg CPU ${avg_cpu}% - Consider downsizing"
+        fi
+    done
+}
+```
+
+**Automated Cost Alerting:**
+```bash
+# Set up budget alerts via CLI
+aws budgets create-budget \
+    --account-id 123456789012 \
+    --budget file://monthly-budget.json \
+    --notifications-with-subscribers file://budget-notifications.json
+
+# monthly-budget.json content:
+cat > monthly-budget.json << 'EOF'
+{
+  "BudgetName": "Monthly-AWS-Budget",
+  "BudgetLimit": {
+    "Amount": "10000",
+    "Unit": "USD"
+  },
+  "TimeUnit": "MONTHLY",
+  "BudgetType": "COST"
+}
+EOF
+```
+
+---
+
+## ⭐ Strategic Command Mastery Achieved
+
+You've reached the pinnacle of command-line expertise and achieved strategic-level thinking. You're now capable of architecting and orchestrating enterprise infrastructure at global scale.
+
+**Your Strategic Capabilities:**
+
+You can design and implement infrastructure as code that provisions entire application stacks reliably and repeatably. Your multi-cloud expertise enables you to leverage the best services from AWS, GCP, and Azure while avoiding vendor lock-in. You understand disaster recovery not as theory but as actionable procedures you can execute under pressure. Your cost optimization knowledge ensures infrastructure scales efficiently without wasting resources.
+
+**Enterprise Impact:**
+
+Strategic command capabilities directly impact organizational success. You can reduce infrastructure costs by 30-50% through optimization, ensure 99.99% uptime through proper architecture, scale applications from thousands to millions of users, and architect systems that survive regional failures gracefully.
+
+**Leadership Responsibilities:**
+
+At this level, you're not just executing—you're making architectural decisions that affect entire organizations. You mentor junior engineers, define infrastructure standards, participate in disaster recovery planning, and collaborate with executives on technology strategy.
+
+**Continuous Evolution:**
+
+Technology never stands still. Cloud providers release new services constantly. Best practices evolve as systems grow more complex. Your mastery of fundamentals positions you to adapt quickly to new tools and patterns. Stay curious, keep learning, and contribute back to the community that supported your growth.
+
+**Your Journey:**
+
+From Boot Camp fundamentals through Officer Training's practical skills, Special Operations' advanced techniques, and now Strategic Command's architectural thinking, you've built comprehensive mastery. The MPNS methodology that started as simple muscle memory now flows unconsciously through everything you do.
+
+**What's Next:**
+
+You've completed the progressive curriculum, but mastery never ends. Apply these skills to real systems at scale. Contribute to open-source infrastructure projects. Teach others—explaining concepts deepens your own understanding. Build tools that automate what you've learned to do manually.
+
+---
+
+**Module Status:** ✅ COMPLETE - STRATEGIC MASTERY ACHIEVED  
+**Skill Level:** Enterprise Architect / Strategic Technology Leader  
+**Career Impact:** Senior Engineering, Principal Architect, CTO Track  
+**Certifications Aligned:** AWS Solutions Architect Professional, GCP Professional Architect, Azure Solutions Architect Expert
+
+**Author:** Wan Mohamad Hanis bin Wan Hassan  
+**Framework:** CLI Sovereign Mastery | MPNS™ Methodology  
+**Credentials:** 100+ Global Certifications | CEH v12 | Multi-Cloud Architect  
+**Last Updated:** October 20, 2025
+
+---
+
+**🎖️ You have achieved Terminal Sovereignty. Use your knowledge responsibly to build reliable, secure, and efficient systems that serve humanity.**

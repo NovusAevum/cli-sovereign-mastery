@@ -475,3 +475,188 @@ iperf3 -c server_ip -t 30 -P 10  # Client: 30 sec, 10 parallel streams
 **Special Operations module establishing advanced capabilities...**
 
 **Continuing with remaining sections (Strategic Command, Cloud, Containers, Automation, Monitoring)...**
+
+---
+
+## PART 5: ADVANCED DATA PROCESSING & TRANSFORMATION
+
+### JSON Processing with jq
+
+Modern systems communicate through JSON APIs, making JSON processing essential for advanced operations. The `jq` tool is a powerful JSON processor that lets you query, filter, and transform JSON data with elegance.
+
+**Basic jq Operations:**
+```bash
+# Pretty-print JSON
+echo '{"name":"hanis","age":30}' | jq '.'
+
+# Extract specific field
+echo '{"name":"hanis","age":30}' | jq '.name'
+# Output: "hanis"
+
+# Extract from array
+echo '[{"name":"alice"},{"name":"bob"}]' | jq '.[0].name'
+# Output: "alice"
+
+# Filter array elements
+echo '[{"name":"alice","age":25},{"name":"bob","age":30}]' | jq '.[] | select(.age > 25)'
+
+# Map transformation
+echo '[1,2,3,4,5]' | jq 'map(. * 2)'
+# Output: [2,4,6,8,10]
+
+# Combine fields
+echo '{"first":"Wan","last":"Hanis"}' | jq '.first + " " + .last'
+# Output: "Wan Hanis"
+```
+
+**Real-World API Processing:**
+```bash
+# Parse AWS CLI JSON output
+aws ec2 describe-instances | jq '.Reservations[].Instances[] | {id: .InstanceId, state: .State.Name, ip: .PrivateIpAddress}'
+
+# Extract specific fields from curl response
+curl -s https://api.github.com/users/novusaevum | jq '{name: .name, repos: .public_repos, followers: .followers}'
+
+# Filter and count
+curl -s https://api.github.com/users/novusaevum/repos | jq '[.[] | select(.language == "Python")] | length'
+```
+
+---
+
+## PART 6: SYSTEM MONITORING & DIAGNOSTICS
+
+### Real-Time System Analysis
+
+Professional operators need to diagnose problems quickly under pressure. These techniques enable rapid system assessment and troubleshooting.
+
+**Comprehensive System Health Check:**
+```bash
+#!/bin/bash
+# Rapid system diagnostics
+
+echo "=== System Health Check ==="
+echo "Timestamp: $(date)"
+echo ""
+
+# CPU Information
+echo "CPU Cores: $(nproc)"
+echo "CPU Load (1/5/15 min): $(uptime | awk -F'load average:' '{print $2}')"
+echo ""
+
+# Memory Status
+free -h | awk 'NR==2{printf "Memory Usage: %s/%s (%.2f%%)\n", $3,$2,$3*100/$2}'
+echo ""
+
+# Disk Usage (critical only)
+echo "Disk Usage (>80%):"
+df -h | awk 'NR>1 && $5+0 > 80 {print $6 ": " $5}'
+echo ""
+
+# Network Connectivity
+echo "Network Status:"
+ping -c 1 8.8.8.8 > /dev/null 2>&1 && echo "✓ Internet: Connected" || echo "✗ Internet: Disconnected"
+echo ""
+
+# Top CPU Consumers
+echo "Top 5 CPU Processes:"
+ps aux --sort=-%cpu | head -6 | tail -5 | awk '{printf "%-10s %5s%% %s\n", $1, $3, $11}'
+echo ""
+
+# Top Memory Consumers
+echo "Top 5 Memory Processes:"
+ps aux --sort=-%mem | head -6 | tail -5 | awk '{printf "%-10s %5s%% %s\n", $1, $4, $11}'
+```
+
+**Log Analysis Patterns:**
+```bash
+# Real-time error monitoring with context
+tail -f /var/log/syslog | grep --line-buffered -i error | while read line; do
+    echo "$(date '+%H:%M:%S') - $line"
+    # Could send to monitoring system here
+done
+
+# Analyze patterns in logs
+# Find most common errors
+grep -i error /var/log/application.log | \
+    sed 's/.*ERROR: //' | \
+    sort | uniq -c | sort -rn | head -10
+
+# Time-based log analysis
+awk '/2025-10-20/ && /ERROR/' /var/log/app.log | \
+    cut -d' ' -f1-3 | uniq -c
+```
+
+---
+
+## PART 7: ADVANCED FILE OPERATIONS
+
+### Symbolic Links and Hard Links
+
+Understanding links is crucial for efficient file management and understanding Unix file systems.
+
+**Symbolic Links (Soft Links):**
+```bash
+# Create symbolic link
+ln -s /path/to/original /path/to/link
+
+# Real-world use: Version management
+ln -s /opt/app/version-2.0 /opt/app/current
+# Upgrade by changing link:
+ln -snf /opt/app/version-3.0 /opt/app/current
+
+# Verify link
+ls -l /opt/app/current
+# Output: current -> /opt/app/version-3.0
+
+# Find broken symlinks
+find /path -type l ! -exec test -e {} \; -print
+```
+
+**Hard Links:**
+```bash
+# Create hard link (same inode, different name)
+ln /path/to/original /path/to/hardlink
+
+# Both names refer to same data
+ls -li /path/to/original /path/to/hardlink
+# Same inode number = same file
+
+# Use case: Backups without duplicating data
+cp -l original.txt backup.txt  # Hard link copy
+```
+
+---
+
+## 🎖️ Special Operations Mastery Achieved
+
+You've completed Special Operations training and achieved advanced command-line proficiency. You're now capable of enterprise-level system administration, sophisticated automation, and complex problem-solving under pressure.
+
+**Your Advanced Capabilities:**
+
+You can architect and implement production-grade automation scripts with proper error handling, logging, and maintainability. Your text processing skills enable sophisticated data analysis and transformation. You understand performance optimization at the system level, allowing you to diagnose and resolve bottlenecks. Your networking knowledge extends beyond basics to advanced traffic analysis and security considerations.
+
+**Professional Application:**
+
+These skills distinguish senior engineers from intermediate practitioners. You can now optimize application performance through system-level tuning, automate complex deployment workflows across multiple servers, troubleshoot production incidents rapidly using advanced diagnostic techniques, and design robust automation that handles edge cases gracefully.
+
+**The Path Forward:**
+
+Special Operations represents professional-grade capability. You're equipped for roles like Site Reliability Engineer, DevOps Engineer, and Senior System Administrator. These positions require exactly the skills you've mastered: automation, optimization, troubleshooting, and architectural thinking.
+
+**What's Next:**
+
+You're ready for Strategic Command, where you'll learn infrastructure as code, multi-cloud orchestration, and enterprise architecture patterns. This is where individual expertise scales to organizational impact. The foundation you've built enables you to architect systems that serve millions of users reliably.
+
+**Continue Your Journey:** [Strategic Command Module](../04-strategic-command/README.md)
+
+---
+
+**Module Status:** ✅ COMPLETE  
+**Skill Level:** Advanced Professional Operations  
+**Time to Mastery:** 40+ hours of practice plus real-world application  
+**Prerequisites for Next Module:** Comfort with all advanced techniques and automation patterns
+
+**Author:** Wan Mohamad Hanis bin Wan Hassan  
+**Framework:** CLI Sovereign Mastery | MPNS™ Methodology  
+**Certifications:** CEH v12, AWS/GCP/Azure Architect, 100+ Professional Certifications  
+**Last Updated:** October 20, 2025
