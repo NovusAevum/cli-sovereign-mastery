@@ -1,4 +1,61 @@
-ration]
+# 🧠 CLI Sovereign Mastery Framework
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Certification Powered](https://img.shields.io/badge/Certifications-100%2B-brightgreen)](https://www.credly.com/users/triumphanthanis)
+[![Complete](https://img.shields.io/badge/Status-Complete-success.svg)](https://github.com/novusaevum/cli-sovereign-mastery)
+[![Documentation](https://img.shields.io/badge/Docs-6000%2B%20Lines-blue.svg)](https://github.com/novusaevum/cli-sovereign-mastery/tree/main/docs)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](http://makeapullrequest.com)
+
+> **"Master the terminal. Control your entire system. From boot camp to strategic command."**
+
+**Enterprise-grade command line interface mastery framework by [Wan Mohamad Hanis bin Wan Hassan](https://www.linkedin.com/in/wanmohamadhanis)** — Transdisciplinary expert in AI, Cybersecurity (CEH v12), Cloud Computing (AWS, GCP, Azure), with 100+ global certifications including ethical hacking, cloud architecture, and enterprise design thinking.
+
+---
+
+## 🎯 Mission Statement
+
+This repository transforms command-line knowledge from scattered commands into a systematic mastery framework. Built on the **MPNS™ Methodology** (Mkdir → Position → Nano → Save), this comprehensive guide takes you from basic file operations to complete system sovereignty through terminal control.
+
+**What makes this different:** Every command is contextualized with security implications from both red team and blue team perspectives, performance considerations for enterprise scale, real-world scenarios from Fortune 500 deployments, and cross-platform nuances for Linux, macOS, and Windows (WSL). Zero fluff—only production-grade knowledge backed by 100+ professional certifications.
+
+---
+
+## 📊 Repository Statistics
+
+| Metric | Value |
+|--------|-------|
+| **Total Documentation** | 6,000+ lines |
+| **Complete Modules** | 10 comprehensive guides |
+| **Skill Levels** | 4 progressive stages |
+| **Automation Scripts** | 2 production-ready utilities |
+| **Mermaid Diagrams** | 5 advanced visualizations |
+| **Code Examples** | 500+ enterprise-grade patterns |
+| **Certifications Aligned** | 20+ including CEH, AWS, GCP, Azure, CKA |
+
+---
+
+## 🗺️ Learning Architecture
+
+```mermaid
+graph TD
+    A[🎖️ Boot Camp<br/>Fundamentals] --> B[👔 Officer Training<br/>Intermediate Skills]
+    B --> C[🎯 Special Operations<br/>Advanced Techniques]
+    C --> D[⭐ Strategic Command<br/>System Mastery]
+    
+    A --> A1[File System Navigation]
+    A --> A2[File Operations & Permissions]
+    A --> A3[Text Processing Basics]
+    
+    B --> B1[Process Management]
+    B --> B2[Network Operations]
+    B --> B3[Shell Scripting Automation]
+    
+    C --> C1[Advanced Scripting]
+    C --> C2[Performance Optimization]
+    C --> C3[System Diagnostics]
+    
+    D --> D1[Infrastructure as Code]
+    D --> D2[Multi-Cloud Orchestration]
     D --> D3[Disaster Recovery & HA]
     
     style A fill:#4a90e2,stroke:#333,stroke-width:2px,color:#fff
@@ -164,19 +221,15 @@ graph TD
 ## 💡 Unique Value Propositions
 
 ### 1. MPNS™ Methodology
-
 Your original, trademarked learning pattern creates muscle memory through systematic repetition. Unlike scattered tutorials, MPNS™ builds unconscious competence.
 
 ### 2. Dual Security Perspective
-
 Every security topic presents both **red team (offensive)** and **blue team (defensive)** perspectives. Understand attacks to architect defenses. Learn defensive techniques grounded in real attack vectors.
 
 ### 3. Enterprise-Grade Only
-
 Zero toy examples. Every script includes comprehensive error handling, logging, input validation, and security checks. Code you can deploy in production immediately.
 
 ### 4. Certification Aligned
-
 Content maps to 20+ professional certifications including:
 - **Security:** CEH v12, OSCP, CompTIA Security+
 - **Cloud:** AWS Solutions Architect, GCP Professional Architect, Azure Administrator
@@ -184,15 +237,12 @@ Content maps to 20+ professional certifications including:
 - **Linux:** CompTIA Linux+, RHCSA, LPIC-1/2
 
 ### 5. Multi-Cloud Expertise
-
 Not vendor-locked. Master AWS CLI, Google Cloud SDK, and Azure CLI simultaneously. Learn patterns that translate across platforms.
 
 ### 6. Real-World Context
-
 Examples drawn from actual Fortune 500 deployments, startup scaling challenges, and enterprise security incidents. Learn what actually matters in production.
 
 ### 7. Cross-Platform Coverage
-
 Every command includes Linux, macOS, and Windows (WSL) considerations. Platform-specific nuances explicitly documented.
 
 ---
@@ -251,7 +301,6 @@ This framework prepares you for roles including:
 ## 📈 Success Metrics
 
 ### Learning Outcomes
-
 - **10-15 hours:** Boot Camp completion, foundational competence
 - **30-40 hours:** Officer Training + specialization, professional capability
 - **60-80 hours:** Special Operations mastery, senior-level expertise
@@ -283,7 +332,6 @@ Excellence through collaboration. Contribution guidelines prioritize quality:
 ### Quality Standards
 
 All contributions must meet these criteria:
-
 1. **Production-Grade:** Comprehensive error handling, logging, validation
 2. **Security-Reviewed:** No vulnerabilities or insecure patterns introduced
 3. **Well-Documented:** Inline comments, usage examples, edge cases covered
